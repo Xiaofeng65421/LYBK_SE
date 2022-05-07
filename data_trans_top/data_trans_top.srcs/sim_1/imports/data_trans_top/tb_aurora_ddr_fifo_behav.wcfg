@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_RouterSychTop_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_RouterSychTop" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="12840001fs"></ZoomEndTime>
+      <Cursor1Time time="0fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="165"></NameColumnWidth>
+      <ValueColumnWidth column_width="58"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="50" />
+   <wave_markers>
+      <marker time="101015000" label="" />
+   </wave_markers>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/TrigOkOut" type="logic">
+      <obj_property name="ElementShortName">TrigOkOut</obj_property>
+      <obj_property name="ObjectShortName">TrigOkOut</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/ready_id" type="array">
+      <obj_property name="ElementShortName">ready_id[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ready_id[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/ready_id_valid" type="logic">
+      <obj_property name="ElementShortName">ready_id_valid</obj_property>
+      <obj_property name="ObjectShortName">ready_id_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/rx_data" type="array">
+      <obj_property name="ElementShortName">rx_data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">rx_data[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/rx_data_vald" type="logic">
+      <obj_property name="ElementShortName">rx_data_vald</obj_property>
+      <obj_property name="ObjectShortName">rx_data_vald</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/tx_data" type="array">
+      <obj_property name="ElementShortName">tx_data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">tx_data[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/tx_data_vald" type="logic">
+      <obj_property name="ElementShortName">tx_data_vald</obj_property>
+      <obj_property name="ObjectShortName">tx_data_vald</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/trig_start_point" type="array">
+      <obj_property name="ElementShortName">trig_start_point[7:0]</obj_property>
+      <obj_property name="ObjectShortName">trig_start_point[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/trig_sync_delay" type="array">
+      <obj_property name="ElementShortName">trig_sync_delay[7:0]</obj_property>
+      <obj_property name="ObjectShortName">trig_sync_delay[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/trig_task_id" type="array">
+      <obj_property name="ElementShortName">trig_task_id[7:0]</obj_property>
+      <obj_property name="ObjectShortName">trig_task_id[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/trig_task_valid" type="logic">
+      <obj_property name="ElementShortName">trig_task_valid</obj_property>
+      <obj_property name="ObjectShortName">trig_task_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/sync" type="logic">
+      <obj_property name="ElementShortName">sync</obj_property>
+      <obj_property name="ObjectShortName">sync</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/ready_start" type="logic">
+      <obj_property name="ElementShortName">ready_start</obj_property>
+      <obj_property name="ObjectShortName">ready_start</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/ready_start_r1" type="logic">
+      <obj_property name="ElementShortName">ready_start_r1</obj_property>
+      <obj_property name="ObjectShortName">ready_start_r1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/ready_start_r2" type="logic">
+      <obj_property name="ElementShortName">ready_start_r2</obj_property>
+      <obj_property name="ObjectShortName">ready_start_r2</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/config_data" type="array">
+      <obj_property name="ElementShortName">config_data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">config_data[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/config_data_vald" type="logic">
+      <obj_property name="ElementShortName">config_data_vald</obj_property>
+      <obj_property name="ObjectShortName">config_data_vald</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/delay_data" type="array">
+      <obj_property name="ElementShortName">delay_data[7:0]</obj_property>
+      <obj_property name="ObjectShortName">delay_data[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/instruction" type="array">
+      <obj_property name="ElementShortName">instruction[7:0]</obj_property>
+      <obj_property name="ObjectShortName">instruction[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/inst_vald" type="logic">
+      <obj_property name="ElementShortName">inst_vald</obj_property>
+      <obj_property name="ObjectShortName">inst_vald</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/TrigOut" type="logic">
+      <obj_property name="ElementShortName">TrigOut</obj_property>
+      <obj_property name="ObjectShortName">TrigOut</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/Rdy_id" type="array">
+      <obj_property name="ElementShortName">Rdy_id[7:0]</obj_property>
+      <obj_property name="ObjectShortName">Rdy_id[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/Rdy_id_vald" type="logic">
+      <obj_property name="ElementShortName">Rdy_id_vald</obj_property>
+      <obj_property name="ObjectShortName">Rdy_id_vald</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/TRigOk" type="logic">
+      <obj_property name="ElementShortName">TRigOk</obj_property>
+      <obj_property name="ObjectShortName">TRigOk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/TrigOut_sync" type="logic">
+      <obj_property name="ElementShortName">TrigOut_sync</obj_property>
+      <obj_property name="ObjectShortName">TrigOut_sync</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/TrigOut_delay" type="logic">
+      <obj_property name="ElementShortName">TrigOut_delay</obj_property>
+      <obj_property name="ObjectShortName">TrigOut_delay</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/TrigOut_delay_f" type="logic">
+      <obj_property name="ElementShortName">TrigOut_delay_f</obj_property>
+      <obj_property name="ObjectShortName">TrigOut_delay_f</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/Trig_delay_cnt" type="array">
+      <obj_property name="ElementShortName">Trig_delay_cnt[7:0]</obj_property>
+      <obj_property name="ObjectShortName">Trig_delay_cnt[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/Trig_delay_en" type="logic">
+      <obj_property name="ElementShortName">Trig_delay_en</obj_property>
+      <obj_property name="ObjectShortName">Trig_delay_en</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/state" type="array">
+      <obj_property name="ElementShortName">state[3:0]</obj_property>
+      <obj_property name="ObjectShortName">state[3:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FF0080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/TrigIn" type="logic">
+      <obj_property name="ElementShortName">TrigIn</obj_property>
+      <obj_property name="ObjectShortName">TrigIn</obj_property>
+      <obj_property name="CustomSignalColor">#FF0080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/Trig_create_en" type="logic">
+      <obj_property name="ElementShortName">Trig_create_en</obj_property>
+      <obj_property name="ObjectShortName">Trig_create_en</obj_property>
+      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/trigger_time_cnt" type="array">
+      <obj_property name="ElementShortName">trigger_time_cnt[7:0]</obj_property>
+      <obj_property name="ObjectShortName">trigger_time_cnt[7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/trig_pulse" type="logic">
+      <obj_property name="ElementShortName">trig_pulse</obj_property>
+      <obj_property name="ObjectShortName">trig_pulse</obj_property>
+      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/sync_create_en" type="logic">
+      <obj_property name="ElementShortName">sync_create_en</obj_property>
+      <obj_property name="ObjectShortName">sync_create_en</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/trig_pulse_cnt" type="array">
+      <obj_property name="ElementShortName">trig_pulse_cnt[3:0]</obj_property>
+      <obj_property name="ObjectShortName">trig_pulse_cnt[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/sync_create_cnt" type="array">
+      <obj_property name="ElementShortName">sync_create_cnt[7:0]</obj_property>
+      <obj_property name="ObjectShortName">sync_create_cnt[7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/sync_f" type="logic">
+      <obj_property name="ElementShortName">sync_f</obj_property>
+      <obj_property name="ObjectShortName">sync_f</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/sync" type="logic">
+      <obj_property name="ElementShortName">sync</obj_property>
+      <obj_property name="ObjectShortName">sync</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/trig_f" type="logic">
+      <obj_property name="ElementShortName">trig_f</obj_property>
+      <obj_property name="ObjectShortName">trig_f</obj_property>
+      <obj_property name="CustomSignalColor">#FFA500</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/trig_flag" type="logic">
+      <obj_property name="ElementShortName">trig_flag</obj_property>
+      <obj_property name="ObjectShortName">trig_flag</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/TRIGGER_P" type="array">
+      <obj_property name="ElementShortName">TRIGGER_P[31:0]</obj_property>
+      <obj_property name="ObjectShortName">TRIGGER_P[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/SYNC_L" type="array">
+      <obj_property name="ElementShortName">SYNC_L[31:0]</obj_property>
+      <obj_property name="ObjectShortName">SYNC_L[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/TRIG_SYNC_D" type="array">
+      <obj_property name="ElementShortName">TRIG_SYNC_D[31:0]</obj_property>
+      <obj_property name="ObjectShortName">TRIG_SYNC_D[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/ready" type="array">
+      <obj_property name="ElementShortName">ready[3:0]</obj_property>
+      <obj_property name="ObjectShortName">ready[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/trig_delay_calib" type="array">
+      <obj_property name="ElementShortName">trig_delay_calib[3:0]</obj_property>
+      <obj_property name="ObjectShortName">trig_delay_calib[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/sync_calib" type="array">
+      <obj_property name="ElementShortName">sync_calib[3:0]</obj_property>
+      <obj_property name="ObjectShortName">sync_calib[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_RouterSychTop/RouterSychTop_inst/work" type="array">
+      <obj_property name="ElementShortName">work[3:0]</obj_property>
+      <obj_property name="ObjectShortName">work[3:0]</obj_property>
+   </wvobject>
+</wave_config>
