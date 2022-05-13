@@ -21,14 +21,15 @@
 
 
 module lybk_trigger#(
-     parameter FPGA_AMOUNT = 16//FPGA数量
-	)(
+     parameter FPGA_AMOUNT = 16,//FPGA数量
+     parameter FPGA_MASK_init = 16'hC307,//初始FPGA掩码
+     parameter TASK_ID_init = 8'h00//初始任务ID
+    )(
         input                    DATA_CLK,//数据传输时钟
         input                    TRIGGER_CLK,//触发时钟，100M
         input                    RST_N,
 
         input                    S_CIRCLE_DATA_VALID,//输入使能信号
-        input                    SYNC_PULSE,
         input  [7:0]             ZKBK_TASK_ID,
         input                    ZKBK_TRIGGER,//中控板卡触发信号
         input  [7:0]             B_CIRCLE_AMOUNT,//大循环数量
@@ -37,6 +38,8 @@ module lybk_trigger#(
         input  [63:0]            S_CIRCLE_DATA,//小循环触发数据
         
         output                   IDLE,
+        output [7:0]             TASK_ID_out,
+        output [FPGA_AMOUNT-1:0] FPGA_ID_out,
 
         input  [FPGA_AMOUNT-1:0] FPGA_READY,
         output [FPGA_AMOUNT-1:0] TRIGGER_OUT,
@@ -84,6 +87,8 @@ module lybk_trigger#(
     assign trigger_success = (zkbk_trigger_respond)?(trigger_time_cnt < (TIME_1S - 1))?1 : 0 : 0;
 
     assign TO_ZKBK_READY   = to_zkbk_ready & IDLE;
+    assign FPGA_ID_out     = fpga_id;
+    assign TASK_ID_out     = task_id;
 //////////////////////////(首次)就绪延迟///////////////////////////////////////
     always @(posedge DATA_CLK or negedge RST_N)
       if (!RST_N) begin
@@ -128,13 +133,14 @@ module lybk_trigger#(
 
 
  lybk_trigger_create#(
-    .FPGA_NUM(FPGA_AMOUNT) 
+    .FPGA_NUM(FPGA_AMOUNT),
+    .FPGA_MASK_init(FPGA_MASK_init),
+    .TASK_ID_init(TASK_ID_init) 
     )lybk_trigger_create_inst(
       .DATA_CLK(DATA_CLK),//万兆传输时钟
       .TRIGGER_CLK(TRIGGER_CLK),//7044 100M
       .RST_N(RST_N),//低电平复位
       .S_CIRCLE_DATA_VALID(S_CIRCLE_DATA_VALID),//输入使能信号(数据有效信号)
-      .SYNC_PULSE(SYNC_PULSE),
       .ZKBK_TASK_ID(ZKBK_TASK_ID),//中控板卡任务ID
       .ZKBK_TRIGGER(ZKBK_TRIGGER),//中控板卡触发信号
 
@@ -161,8 +167,8 @@ module lybk_trigger#(
 
  lybk_trigger_trans#(
     .FPGA_NUM(FPGA_AMOUNT)
-	)lybk_trigger_trans_inst(
-	   .TRIGGER_CLK(TRIGGER_CLK),//逻辑时钟
+    )lybk_trigger_trans_inst(
+       .TRIGGER_CLK(TRIGGER_CLK),//逻辑时钟
      .RST_N(RST_N),
        .TRIGGER_IN_VALID(trigger_valid),//触发信号输入有效(触发工作状态)
        .TRIGGER_IN(trigger),  //触发信号输入(来自触发生成模块)

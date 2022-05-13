@@ -22,9 +22,9 @@
 
 module lybk_top_SE#(
    parameter FPGA_NUM = 16
-	)(
-	input           SYS_CLK_P, //7044 100M
-	input           SYS_CLK_N,
+    )(
+    input           SYS_CLK_P, //7044 100M
+    input           SYS_CLK_N,
     input           osc_clk_p, //晶振 200M
     input           osc_clk_n,
     input           reset,
@@ -33,7 +33,7 @@ module lybk_top_SE#(
     output          SCLK,             
     output          SLEN,                  
 //-----------sync--------------//
-	input           SMA_TRIG_IN,
+    input           SMA_TRIG_IN,
     output          SMA_TrigOK_OUT,//trigok
     input           rxd_p,
     input           rxd_n,
@@ -58,8 +58,6 @@ module lybk_top_SE#(
     input           GPIO_SW_S,   // in   : Push Switch
     input   [3:0]   GPIO_DIP_SW,   // in   : SW[3:0]
 //-------------VPX signal------------------// 
-/*    input  [FPGA_NUM-1 : 0] FPGA_READY_P,
-    input  [FPGA_NUM-1 : 0] FPGA_READY_N,*/
     input  [FPGA_NUM-1 : 0] FPGA_READY,
     input  [FPGA_NUM-1 : 0] FPGA_RESET_FINISH,
     output [FPGA_NUM-1 : 0] FPGA_SYS_RST,
@@ -145,7 +143,12 @@ module lybk_top_SE#(
      end
  end
 
+wire [15:0] fpga_mask_init;
 // vio_reset vio_reset(clk_7044_100m, rst_vio, passback_data_length);
+init_set init_set_inst (
+  .clk(clk_7044_100m),                // input wire clk
+  .probe_out0(fpga_mask_init)  // output wire [15 : 0] probe_out0
+);
 
 //---------------7044------------------//
 IBUFDS IBUFDS_inst (
@@ -159,12 +162,9 @@ BUFG BUFG_inst (
     .I(SYS_CLK)  // 1-bit input: Clock input
  );
 
-wire   HMC_Done;
-
 hmc7044_top U00_hmc7044_top(
       .clk_200m(clk_200m),
-      .reset(reset),
-      .HMC_Done(HMC_Done),
+      .reset(user_rst_r[7]),
       .SDATA(SDATA), 
       .SCLK(SCLK),  
       .SLEN(SLEN)   
@@ -177,10 +177,10 @@ hmc7044_top U00_hmc7044_top(
    wire done;
    wire error;
 
-   assign GPIO_LED[7] = HMC_Done;
-/*   assign GPIO_LED[6] = error;
+   assign GPIO_LED[7] = locked;
+   assign GPIO_LED[6] = error;
    assign GPIO_LED[5] = done;
-*/
+
 si5338 # (
     .input_clk(32'd65_000_000),
     .i2c_address(7'b111_0000),
@@ -188,7 +188,7 @@ si5338 # (
 )
 U00_si5338 (
     .clk        (CLK_10M    ),
-    .reset      (reset),
+    .reset      (user_rst_r[7]),
     .busy_out   (busy_out   ),
     .done       (done       ),
     .error      (error      ),
@@ -199,37 +199,52 @@ U00_si5338 (
 //----------S2D---------------//
  wire [FPGA_NUM-1 : 0]  sync_out;
  wire [FPGA_NUM-1 : 0]  trig_out;
-/* wire [FPGA_NUM-1 : 0]  fpga_ready;*/
  assign sync_out = {FPGA_NUM{sync}};
 
 ready_trigger_port #(.NUM(FPGA_NUM)) U01_ready_trigger(
-/*    .fpga_ready(fpga_ready),*/
     .trig_out(trig_out),
     .sync_out(sync_out),
     .TRIGGER_OUT_P(TRIGGER_OUT_P),
     .TRIGGER_OUT_N(TRIGGER_OUT_N)
-/*    .FPGA_READY_P(FPGA_READY_P),
-    .FPGA_READY_N(FPGA_READY_N)*/ 
     );
 
 //---------------------------------//
 //---------SYNC_CALIB----------------//
 
-wire [7:0] zk_task_id;
-wire       trig_flag;
-wire       trig_pulse;
-wire       sync;
-wire           to_zk_ready;
-wire  [7:0]    to_zk_task_id;
-wire  [3:0]    system_state;
+wire  [7:0]          zk_task_id;
+wire                 trig_flag;
+wire                 sync;
+wire                 to_zk_ready;
+wire  [7:0]          to_zk_task_id;
+wire  [3:0]          system_state;
+wire  [7:0]          resetorder_type;
+wire                 resetorder_type_valid;
+wire  [FPGA_NUM-1:0] FPGA_ID_local;
+wire  [7:0]          TASK_ID_thread;  
+
+wire                 ready_check_en;
+wire                 ready_receive_valid;
+wire                 bk_order_datapkg_valid;
+wire  [63:0]         bk_order_datapkg;
 
 lybk_calib U02_lybk_calib(
    .clk_100m(clk_7044_100m),//7044 100M
-   .rst(sys_rst),
+   .sync_rst(sys_rst),
+   .soft_rst(user_rst),
    
    .SMA_TRIG_IN(SMA_TRIG_IN),
    .SMA_TrigOK_OUT(SMA_TrigOK_OUT),
    .state(system_state),
+   .resetorder_type(resetorder_type),
+   .resetorder_type_valid(resetorder_type_valid),
+   .FPGA_ID_local(FPGA_ID_local),
+   .TASK_ID_thread(TASK_ID_thread),
+
+   .fpga_ready_state_mask(fpga_ready_state_mask),
+   .ready_check_en(ready_check_en),
+   .ready_receive_valid(ready_receive_valid),
+   .bk_order_datapkg(bk_order_datapkg),
+   .bk_order_datapkg_valid(bk_order_datapkg_valid),
 
    .rxd_p(rxd_p),
    .rxd_n(rxd_n),
@@ -241,10 +256,9 @@ lybk_calib U02_lybk_calib(
 
    .zk_task_id(zk_task_id),
    .trig_flag(trig_flag),
-   .trig_pulse(trig_pulse),
    .sync(sync)   
 
-	);
+    );
 //---------------------------------//
 /*//rom
 reg          data_en;
@@ -399,28 +413,37 @@ always @(posedge clk_7044_100m)
 (* MARK_DEBUG="true" *)wire  [63:0]  xgmii_passback_data;
 (* MARK_DEBUG="true" *)wire          xgmii_passback_data_valid;
 (* MARK_DEBUG="true" *)wire          DDR_RD_REQ;
-wire  [31:0]  PASSBACK_LENGTH;
+                       wire  [31:0]  PASSBACK_LENGTH;
+                       wire  [FPGA_NUM-1:0] fpga_ready_state_mask;
 
 assign XGMII_RXD  = xgmii_rxd;//(switch)? data_out : xgmii_rxd;
 assign XGMII_RXDV = xgmii_rxdv;//(switch)? data_out_valid : xgmii_rxdv;
 
-lybk_function U03_lybk_function(
+lybk_function #(
+       .FPGA_MASK_init(fpga_mask_init)//初始fpga掩码
+    ) U03_lybk_function(
       .XGMII_RXD(XGMII_RXD),   //万兆网下发有效位 
       .XGMII_RXDV(XGMII_RXDV), //万兆网下发数据
       .XGMII_RX_CLK(clk_7044_100m),//万兆网下发传输时钟 100M
       .XGMII_TX_CLK(xgmii_clk),//万兆网回传时钟 156.25M
       .TRIGGER_CLK(clk_7044_100m),
-      .VIO_RST_N(~user_rst),
+      .RST_N(~user_rst),
 
-      .SYNC_PULSE(trig_pulse),
       .ZKBK_TRIGGER(trig_flag),
       .ZKBK_TASK_ID(zk_task_id),
       .DDR_RD_REQ(DDR_RD_REQ & (~DDR_BUSY)),//状态回传到万兆网模块对接fifo的读控制(数据回传优先)
+      .SYSTEM_STATE(system_state),
+      .ORDER_TYPE(resetorder_type),
+      .ORDER_TYPE_VALID(resetorder_type_valid),
+      .FPGA_ID_local(FPGA_ID_local),
+      .TASK_ID_thread(TASK_ID_thread),
+
+      .READY_RECEIVE_VALID(ready_receive_valid),
+      .READY_CHECK_EN(ready_check_en),
+      .BK_ORDER_DATAPKG(bk_order_datapkg),
+      .BK_ORDER_DATAPKG_VALID(bk_order_datapkg_valid),
 
       .FPGA_READY(FPGA_READY),
-      .FPGA_RESET_FINISH(FPGA_RESET_FINISH),
-      .SYSTEM_STATE(system_state),
-
       .TO_ZKBK_READY(to_zk_ready),
       .TO_ZKBK_TASK_ID(to_zk_task_id),
       .PASSBACK_LENGTH(PASSBACK_LENGTH),
@@ -465,9 +488,10 @@ lybk_function U03_lybk_function(
       .TO_FPGA16_AURORA_VALID  (fpga16_valid),
 
       .STATE_PASSBACK_DATA(xgmii_passback_data),
-      .STATE_PASSBACK_DV(xgmii_passback_data_valid)
+      .STATE_PASSBACK_DV(xgmii_passback_data_valid),
+      .FPGA_READY_STATE_MASK(fpga_ready_state_mask)
 
-	);
+    );
 //-------------aurora ---------------------//
 wire  [63:0] adda_passback_data;
 wire         adda_passback_data_valid;
@@ -527,7 +551,7 @@ lybk_aurora_top U04_lybk_aurora(
       .TXP_1(TXP_1),
       .TXN_1(TXN_1)
 
-	);
+    );
 //---------------------ETH---------------------//
 (* MARK_DEBUG="true" *)    wire [63:0] DDR_RD_DATA;
 (* MARK_DEBUG="true" *)    wire        DDR_RD_VALID;
@@ -543,7 +567,7 @@ lybk_aurora_top U04_lybk_aurora(
 
     SiTCPXG_EEPROM_TOP U05_SiTCPXG_EEPROM (
         .USER_CLOCK         (clk_7044_100m      ),  // in   : 100M(万兆网下发fifo 156.25M -> 100M)
-        .CPU_RESET          (user_rst_r[7]      ),  // in   : System reset
+/*        .CPU_RESET          (user_rst_r[7]      ),  // in   : System reset*/
         .XGMII_CLOCK        (xgmii_clk          ),  // out  : 156.25M
     // SFP+
         .SFP_TX_DISABLE     (SFP_TX_DISABLE     ),
@@ -569,8 +593,8 @@ lybk_aurora_top U04_lybk_aurora(
         .FIFO_LOOPBACK      (1'b0               ),//默认0   
     // SW, LED
         .GPIO_SW_S          (GPIO_SW_S          ),  // in   : Push Switch
-        .GPIO_DIP_SW        (GPIO_DIP_SW[3:0]   )  // in   : SW[3:0]
-/*        .GPIO_LED           (GPIO_LED[4:0]      )   // out  : LED[4:0]*/
+        .GPIO_DIP_SW        (GPIO_DIP_SW[3:0]   ),  // in   : SW[3:0]
+        .GPIO_LED           (GPIO_LED[4:0]      )   // out  : LED[4:0]
     );
 
 //-------------------DDR-----------------//

@@ -21,31 +21,40 @@
 
 
 module lybk_function#(
-     parameter FPGA_AMOUNT = 16
+     parameter FPGA_AMOUNT = 16,
+     parameter FPGA_MASK_init = 16'hffff,
+     parameter TASK_ID_init = 8'h00
   )(
-       input  [63:0]   XGMII_RXD, //万兆网下发数据    
-       input           XGMII_RXDV, 
-       input           XGMII_RX_CLK,//万兆网下发传输时钟 100M
-       input           XGMII_TX_CLK,//万兆网回传时钟 156.25M
-       input           TRIGGER_CLK,
-       input           VIO_RST_N,
+                              input  [63:0]                XGMII_RXD, //万兆网下发数据    
+                              input                        XGMII_RXDV, 
+                              input                        XGMII_RX_CLK,//万兆网下发传输时钟 100M
+                              input                        XGMII_TX_CLK,//万兆网回传时钟 156.25M
+                              input                        TRIGGER_CLK,
+                              input                        RST_N,
 
-       input           SYNC_PULSE,
-  (* MARK_DEBUG="true" *)     input           ZKBK_TRIGGER,
-  (* MARK_DEBUG="true" *)     input  [7:0]    ZKBK_TASK_ID,
-       input           DDR_RD_REQ,
-       input  [3:0]    SYSTEM_STATE,
+ (* MARK_DEBUG="true" *)      input                        ZKBK_TRIGGER,
+ (* MARK_DEBUG="true" *)      input  [7:0]                 ZKBK_TASK_ID,
+                              input                        DDR_RD_REQ,
+                              input  [3:0]                 SYSTEM_STATE,
+                              input  [7:0]                 ORDER_TYPE,
+                              input                        ORDER_TYPE_VALID,
+                              input  [FPGA_AMOUNT - 1 : 0] FPGA_ID_local,
+                              input  [7:0]                 TASK_ID_thread,
+                              input                        READY_RECEIVE_VALID,//就绪接收有效
+
+                              input                        BK_ORDER_DATAPKG_VALID,
+                              input  [63:0]                BK_ORDER_DATAPKG,
 
  (* MARK_DEBUG="true" *)      input  [FPGA_AMOUNT-1:0]   FPGA_READY,//FPGA回传的就绪信号
- (* MARK_DEBUG="true" *)      input  [FPGA_AMOUNT-1:0]   FPGA_RESET_FINISH,//FPGA复位完成信号
- (* MARK_DEBUG="true" *)      output          TO_ZKBK_READY,
- (* MARK_DEBUG="true" *)      output [7:0]    TO_ZKBK_TASK_ID,
- (* MARK_DEBUG="true" *)      output [31:0]   PASSBACK_LENGTH,
-       output                     PASSBACK_LENGTH_VALID,
+ (* MARK_DEBUG="true" *)      output                     TO_ZKBK_READY,
+ (* MARK_DEBUG="true" *)      output [7:0]               TO_ZKBK_TASK_ID,
+ (* MARK_DEBUG="true" *)      output [31:0]              PASSBACK_LENGTH,
+                              output                     PASSBACK_LENGTH_VALID,
  (* MARK_DEBUG="true" *)      output [FPGA_AMOUNT-1:0]   TRIGGER_OUT,//触发信号
  (* MARK_DEBUG="true" *)      output [FPGA_AMOUNT-1:0]   FPGA_SYS_RST,//FPGA系统复位(高电平)
-       output                     SYS_RST,//系统复位
-       output                     TASK_RST,//线程复位
+                              output                     SYS_RST,//系统复位
+                              output                     TASK_RST,//线程复位
+                              output                     READY_CHECK_EN,//就绪检测使能
 
        output [63:0]  TO_FPGA1_AURORA_DATAPKG,
        output         TO_FPGA1_AURORA_VALID,
@@ -82,13 +91,14 @@ module lybk_function#(
 
        output [63:0]  STATE_PASSBACK_DATA,//万兆网回传数据
        output         STATE_PASSBACK_DV,
-       output         PASSBACK_DONE
+
+       output [FPGA_AMOUNT-1:0] FPGA_READY_STATE_MASK//fpga就绪掩码
     );
      wire          XGMII_CLK;
-(* MARK_DEBUG="true" *)     wire          sys_rst_n,trigger_rst_n,reset_done;
-(* MARK_DEBUG="true" *)     wire  [7:0]   send_fpga_id;
-(* MARK_DEBUG="true" *)     wire  [63:0]  lybk_datapkg,fpga_datapkg;
-(* MARK_DEBUG="true" *)     wire          lybk_datapkg_valid,fpga_datapkg_valid;
+(* MARK_DEBUG="true" *)     wire                       sys_rst_n,trigger_rst_n;//reset_done;
+(* MARK_DEBUG="true" *)     wire      [7:0]            send_fpga_id;
+(* MARK_DEBUG="true" *)     wire      [63:0]           lybk_datapkg,fpga_datapkg;
+(* MARK_DEBUG="true" *)     wire                       lybk_datapkg_valid,fpga_datapkg_valid;
      
      wire  [63:0]  fpga1_aurora,fpga2_aurora,fpga3_aurora,fpga4_aurora,fpga5_aurora,
                    fpga6_aurora,fpga7_aurora,fpga8_aurora,fpga9_aurora,fpga10_aurora,
@@ -98,25 +108,31 @@ module lybk_function#(
                    fpga7_valid,fpga8_valid,fpga9_valid,fpga10_valid,fpga11_valid,fpga12_valid,
                    fpga13_valid,fpga14_valid,fpga15_valid,fpga16_valid;                    
      
-(* MARK_DEBUG="true" *)     wire           s_circle_dv;
-(* MARK_DEBUG="true" *)     wire  [7:0]    b_circle_amount;
-(* MARK_DEBUG="true" *)     wire  [7:0]    order_type;
-(* MARK_DEBUG="true" *)     wire           order_valid;
-(* MARK_DEBUG="true" *)     wire  [7:0]    task_id;
-(* MARK_DEBUG="true" *)     wire  [FPGA_AMOUNT-1:0]   fpga_id;
-(* MARK_DEBUG="true" *)     wire  [FPGA_AMOUNT-1:0]   ready_state;
-(* MARK_DEBUG="true" *)     wire  [63:0]   s_circle_data;
-     wire           lybk_rx_done;
-     wire           idle;
-(* MARK_DEBUG="true" *)     wire  [63:0]   state_passback_data;
-(* MARK_DEBUG="true" *)     wire           state_passback_dv;
-     wire           to_zkbk_ready;
-(* MARK_DEBUG="true" *)     wire           thread_reset_en;
+(* MARK_DEBUG="true" *)     wire                       s_circle_dv;
+(* MARK_DEBUG="true" *)     wire     [7:0]             b_circle_amount;
+(* MARK_DEBUG="true" *)     wire     [7:0]             order_type;
+(* MARK_DEBUG="true" *)     wire                       order_type_valid;
+(* MARK_DEBUG="true" *)     wire     [7:0]             task_id;
+(* MARK_DEBUG="true" *)     wire     [FPGA_AMOUNT-1:0] fpga_id;
+                            wire     [7:0]             task_id_thread;
+                            wire     [FPGA_AMOUNT-1:0] fpga_id_thread;
+(* MARK_DEBUG="true" *)     wire     [FPGA_AMOUNT-1:0] ready_state;
+(* MARK_DEBUG="true" *)     wire     [63:0]            s_circle_data;
+                            wire                       lybk_rx_done;
+                            wire                       idle;
+(* MARK_DEBUG="true" *)     wire     [63:0]            state_passback_data;
+(* MARK_DEBUG="true" *)     wire                       state_passback_dv;
+                            wire                       to_zkbk_ready;
+                            wire     [FPGA_AMOUNT-1:0] fpga_ready;
+
+//-----------------中控就绪回传----------------------------、、
+    assign TO_ZKBK_READY = to_zkbk_ready;
+    assign fpga_ready    = (READY_RECEIVE_VALID)? FPGA_READY : 0;
+    assign FPGA_READY_STATE_MASK = (~ready_state)&fpga_id;//FPGA就绪状态掩码，1代表失败
 //////////////////////////////////////////////////////////数据传输
     assign SYS_RST = ~sys_rst_n;
     assign TASK_RST = ~trigger_rst_n;
     assign XGMII_CLK = XGMII_RX_CLK;
-    assign TO_ZKBK_READY = to_zkbk_ready & (~thread_reset_en);//(~((SYSTEM_STATE == 4'd4)&&thread_reset_en));
 
     assign TO_FPGA1_AURORA_DATAPKG  = fpga1_aurora;
     assign TO_FPGA2_AURORA_DATAPKG  = fpga2_aurora;
@@ -157,20 +173,23 @@ lybk_xgmii_unpack lybk_xgmii_unpack_inst(
     .XGMII_RXD(XGMII_RXD),
     .XGMII_RXDV(XGMII_RXDV),
     .XGMII_CLK(XGMII_CLK),
-    .RST_N(sys_rst_n & trigger_rst_n & VIO_RST_N),
+    .RST_N(sys_rst_n & RST_N),
+    .RX_DONE(READY_CHECK_EN),
 
     .FPGA_ID(send_fpga_id),//FPGA编号
     .LYBK_DATAPKG(lybk_datapkg),//路由板卡数据包
     .FPGA_DATAPKG(fpga_datapkg),//FPGA数据包 
     .LYBK_DATAPKG_VALID(lybk_datapkg_valid),//路由数据包有效
     .FPGA_DATAPKG_VALID(fpga_datapkg_valid)//FPGA数据包有效
-
     );
 
 lybk_xgmii_send lybk_xgmii_send_inst(
      .FPGA_DATAPKG(fpga_datapkg),
      .FPGA_DATAPKG_VALID(fpga_datapkg_valid),
      .FPGA_ID(send_fpga_id),
+
+     .BK_ORDER_DATAPKG(BK_ORDER_DATAPKG),
+     .BK_ORDER_DATAPKG_VALID(BK_ORDER_DATAPKG_VALID),
 
      .FPGA1_AURORA_DATAPKG(fpga1_aurora),
      .FPGA1_AURORA_VALID(fpga1_valid),
@@ -207,8 +226,11 @@ lybk_xgmii_send lybk_xgmii_send_inst(
     );
 ///////////////////////////////////////
 ////////////////data_config////////////
-lybk_config_trans lybk_config_trans_inst(
-      .RST_N(sys_rst_n & trigger_rst_n & VIO_RST_N),
+lybk_config_trans#(
+     .FPGA_MASK_init(FPGA_MASK_init),//初始FPGA掩码
+     .TASK_ID_init(TASK_ID_init)//初始任务ID
+  ) lybk_config_trans_inst(
+      .RST_N(sys_rst_n & RST_N),
       .XGMII_CLK(XGMII_CLK),
       .LYBK_DP_VALID(lybk_datapkg_valid),
       .LYBK_DP(lybk_datapkg),
@@ -216,40 +238,41 @@ lybk_config_trans lybk_config_trans_inst(
       .S_CIRCLE_DATA_VALID(s_circle_dv),//数据有效信号(任务下发有效)
       .B_CIRCLE_AMOUNT(b_circle_amount),//大循环数量
       .ORDER_TYPE(order_type),//指令类型
-      .ORDER_VALID(order_valid),//指令有效信号
-      .TASK_ID(task_id),//任务ID(指令和数据共用)
-      .FPGA_ID(fpga_id),//fpga掩码(指令和数据共用)
+      .ORDER_VALID(order_type_valid),//指令有效信号
+      .TASK_ID(task_id),//任务ID
+      .FPGA_ID(fpga_id),//fpga掩码
       .S_CIRCLE_DATA(s_circle_data),//小循环触发数据
-      .THREAD_RESET_EN(thread_reset_en),
-
       .RX_DONE(lybk_rx_done)
 );
 ////////////////////////////////////////
 ///////////////reset_control////////////////////
-lybk_reset_control lybk_reset_control_inst(
+lybk_reset_control#(
+      .FPGA_MASK_init(FPGA_MASK_init),
+      .FPGA_AMOUNT(FPGA_AMOUNT)
+    ) lybk_reset_control_inst(
        .XGMII_CLK(XGMII_CLK),
-       .ORDER_TYPE(order_type),
-       .ORDER_VALID(order_valid),
-       /*.FPGA_ID(fpga_id),*/
-       .FPGA_RESET_FINISH(FPGA_RESET_FINISH),
-       /*.TASK_ID(task_id),*/
-       .TASK_IDLE(idle),                     
-
-       .TRIGGER_RESET(trigger_rst_n),//触发模块的复位信号(低电平)
+       .ORDER_TYPE(ORDER_TYPE),
+       .ORDER_VALID(ORDER_TYPE_VALID),
+       .TASK_ID_thread(TASK_ID_thread),//多线程复位对应的TASK
+       .FPGA_ID_local(FPGA_ID_local),//局部复位对应的FPGA掩码
+       .FPGA_ID_thread(fpga_id_thread),//多线程复位下的fpga掩码号
+/*       .TASK_IDLE(idle),   */                  
+       .TRIGGER_RESET_N(trigger_rst_n),//触发模块的复位信号(低电平)
        .FPGA_SYS_RST(FPGA_SYS_RST),//FPGA的复位信号(高电平)
-       .SYS_RESET(sys_rst_n),//系统复位(低电平)
-       .RESET_DONE(reset_done)
+       .SYS_RESET_N(sys_rst_n)//系统复位(低电平)
       );
-///////////////////////////////////////
-//////////////////trigger_top//////////
-lybk_trigger lybk_trigger_inst(
-
+///////////////////////////////////////////
+//////////////////trigger_top//////////////
+lybk_trigger#(
+     .FPGA_AMOUNT(FPGA_AMOUNT),
+     .FPGA_MASK_init(FPGA_MASK_init),//初始FPGA掩码
+     .TASK_ID_init(TASK_ID_init)//初始任务ID
+  )  lybk_trigger_inst(
        .DATA_CLK(XGMII_CLK),//数据传输时钟
        .TRIGGER_CLK(TRIGGER_CLK),//触发时钟，300M
-       .RST_N(trigger_rst_n & sys_rst_n & VIO_RST_N),
+       .RST_N(trigger_rst_n & RST_N),
 
        .S_CIRCLE_DATA_VALID(s_circle_dv),//输入使能信号
-       .SYNC_PULSE(SYNC_PULSE),//同步脉冲
        .ZKBK_TASK_ID(ZKBK_TASK_ID),//中控板卡下发的任务
        .ZKBK_TRIGGER(ZKBK_TRIGGER),//中控板卡触发信号
        .B_CIRCLE_AMOUNT(b_circle_amount),//大循环数量
@@ -260,32 +283,32 @@ lybk_trigger lybk_trigger_inst(
        .PASSBACK_LENGTH_VALID(PASSBACK_LENGTH_VALID),
        
        .IDLE(idle),//空闲信号
+       .TASK_ID_out(task_id_thread),
+       .FPGA_ID_out(fpga_id_thread),
 
-       .FPGA_READY(FPGA_READY),//下层FPGA发来的就绪信号
+       .FPGA_READY(fpga_ready),//下层FPGA发来的就绪信号
        .TRIGGER_OUT(TRIGGER_OUT),//触发信号输出
 
        .READY_STATE(ready_state),
        .TO_ZKBK_TASK_ID(TO_ZKBK_TASK_ID),//发向中控的任务（可略去）
        .TO_ZKBK_READY(to_zkbk_ready)//发向上层中控的就绪
 
-	);
+    );
 ///////////////////////////////////////////
 ////////////////state_passback////////////
 lybk_passback lybk_passback_inst(
        .XGMII_CLK(XGMII_CLK),                          
        .ORDER_TYPE(order_type),        
-       .ORDER_VALID(order_valid),
-       .READY_STATE(ready_state),        
+       .ORDER_VALID(order_type_valid),      
 
        .TASK_ID(task_id),       
        .FPGA_ID(fpga_id),       
        .B_CIRCLE_AMOUNT(b_circle_amount),       
        .LYBK_RX_DONE(lybk_rx_done),
-       .RESET_DONE(reset_done),
+       /*.RESET_DONE(reset_done),*/
 
        .STATE_PASSBACK_DV(state_passback_dv),
-       .STATE_PASSBACK_DATA(state_passback_data),
-       .PASSBACK_DONE(PASSBACK_DONE) 
+       .STATE_PASSBACK_DATA(state_passback_data)
        );
 wire    empty;
 wire    rd_en;

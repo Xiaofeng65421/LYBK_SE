@@ -34,7 +34,6 @@ module lybk_xgmii_unpack(
     output [63:0]   FPGA_DATAPKG,//FPGA数据包
     output          LYBK_DATAPKG_VALID,//路由数据包有效
     output          FPGA_DATAPKG_VALID//FPGA数据包有效
-
     );
     
     localparam   st_idle    = 4'b0001;
@@ -63,6 +62,7 @@ module lybk_xgmii_unpack(
    assign RX_DONE = rx_done_t;
    assign ERROR = error_en;
    assign FPGA_ID = (order_type == 8'h01)? fpga_id : 0;
+
 
 //(三段式状态机)同步时序描述状态转移
     always @(posedge XGMII_CLK or negedge RST_N)begin

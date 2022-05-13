@@ -20,11 +20,14 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module lybk_config_trans(
-	     input        RST_N,
-       input        XGMII_CLK,
-       input        LYBK_DP_VALID,
-       input [63:0] LYBK_DP,
+module lybk_config_trans#(
+     parameter FPGA_MASK_init = 16'hC307,//初始FPGA掩码
+     parameter TASK_ID_init = 8'h00//初始任务ID
+  )(
+       input          RST_N,
+       input          XGMII_CLK,
+       input          LYBK_DP_VALID,
+       input [63:0]   LYBK_DP,
         
        output         S_CIRCLE_DATA_VALID,//数据有效信号(任务下发有效)
        output  [7:0]  B_CIRCLE_AMOUNT,//大循环数量
@@ -33,32 +36,20 @@ module lybk_config_trans(
        output  [7:0]  TASK_ID,//任务ID(指令和数据共用)
        output  [15:0] FPGA_ID,//fpga掩码号(指令和数据共用)
        output  [63:0] S_CIRCLE_DATA,//小循环触发数据
-       output         THREAD_RESET_EN,
-
-/*       output  [63:0] SYNC_TEST_DATA,//同步测试数据
-       output         TEST_DATA_VALID,//测试数据有效
-       output  [7:0]  WORK_MODE,//工作模式*/
 
        output         RX_DONE,
        output         ERROR
         
 );
 
-
-     reg [7:0] order_type = 0;//指令类型
+     reg [7:0]  order_type = 0;//指令类型
      reg [55:0] config_data;//配置数据
-     reg [7:0]  task_id = 8'h01;
-     reg [15:0] fpga_id = 16'hc307;
-     reg [7:0] b_circle_amount = 0;
+     reg [7:0]  task_id = TASK_ID_init;
+     reg [15:0] fpga_id = FPGA_MASK_init;
+     reg [7:0]  b_circle_amount = 0;
      reg [63:0] s_circle_data = 0;
-     reg        s_circle_data_valid ; 
+     reg        s_circle_data_valid; 
      reg        order_valid;
-     reg        thread_reset_en = 0;
-     /*reg        order_valid_pre; */ 
-
-/*     reg  [63:0] sync_test_data; 
-     reg         test_data_valid; 
-     reg  [7:0]  work_mode;  */
 
      reg  [7:0] cnt = 0;
      wire [3:0] data_amount;
@@ -79,28 +70,13 @@ module lybk_config_trans(
     assign TASK_ID = task_id ;
     assign FPGA_ID = fpga_id ;
     assign S_CIRCLE_DATA = s_circle_data ; 
-    assign THREAD_RESET_EN = thread_reset_en;
-
-/*    assign SYNC_TEST_DATA = sync_test_data;
-    assign TEST_DATA_VALID = test_data_valid;
-    assign WORK_MODE = work_mode;*/
     
     assign ERROR = error_en;
     assign RX_DONE = rx_done_t;
 
+
 ////////////////////////大循环数据量（64bit）///////////////////////////
 assign data_amount = config_data[23:16]; //(config_data[39:32]%2)?config_data[39:32]/2 +1 : config_data[39:32]/2;
-//////////////////////////线程复位使能/////////////////////////////////
-always @(posedge XGMII_CLK or negedge RST_N)
- if (!RST_N) begin
-     thread_reset_en <= 0;
- end else begin
-   if (order_type == 8'h03) begin
-       thread_reset_en <= 1;
-   end else if (order_type == 8'h01) begin
-       thread_reset_en <= 0;
-   end
- end
 
 //(三段式状态机)同步时序描述状态转移
     always @(posedge XGMII_CLK or negedge RST_N)begin
@@ -151,8 +127,8 @@ always @(posedge XGMII_CLK or negedge RST_N)begin
     s_circle_data <= 0;
     s_circle_data_valid <= 0;
     order_valid <= 0;
-    task_id <= 8'h01;
-    fpga_id <= 16'hc307;
+    task_id <= TASK_ID_init;
+    fpga_id <= FPGA_MASK_init;
     b_circle_amount <= 0;
     config_data <= 0;
 
@@ -187,36 +163,9 @@ always @(posedge XGMII_CLK or negedge RST_N)begin
             end else begin
                 error_en <= 1;
             end 
-        end else if (order_type == 8'h02) begin ///FPGA任务清除
-             fpga_id <= config_data[55:40];
-             skip_en <= 1;
-             order_valid <= 1;
-        end else if (order_type == 8'h03) begin ///清空多线程核
-             skip_en <= 1;
-             order_valid <= 1;
-        end else if (order_type == 8'h04) begin ////机柜复位
-             skip_en <= 1;
-             order_valid <= 1;
-        end else if (order_type == 8'h05) begin //状态查询
-             skip_en <= 1;
-             order_valid <= 1;
-        end else begin
+        end  else begin
              error_en <= 1;
         end
-
-        /*else if (order_type == 8'h06) begin ///同步测试          
-            if (LYBK_DP_VALID) begin
-                test_data_valid <= 1;
-                work_mode <= config_data[7:0];
-                cnt <= cnt + 1;
-                sync_test_data <= LYBK_DP;
-                if (cnt == 139) begin
-                    skip_en <= 1;
-                end
-            end else begin
-                error_en <= 1;
-            end
-        end */
        st_rx_end : 
          if (error_en) begin
            if (!LYBK_DP_VALID) begin

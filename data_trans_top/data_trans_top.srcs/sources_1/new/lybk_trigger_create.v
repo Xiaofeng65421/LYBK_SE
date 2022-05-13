@@ -22,13 +22,14 @@
 
 module lybk_trigger_create#(
     parameter  FPGA_NUM = 16,
-    parameter  TRIGGER_L = 10 //100ns
+    parameter  TRIGGER_L = 10, //100ns
+    parameter  FPGA_MASK_init = 16'hC307,
+    parameter  TASK_ID_init   = 8'h00  
   )(
        input         DATA_CLK,
        input         TRIGGER_CLK,//7044 100M 
        input         RST_N,
        input         S_CIRCLE_DATA_VALID,
-       input         SYNC_PULSE,
        input  [7:0]  ZKBK_TASK_ID,
        input         ZKBK_TRIGGER,
 
@@ -54,8 +55,8 @@ module lybk_trigger_create#(
 );
 
        wire         rst_n;
-       reg   [7:0]  task_id_reg = 8'h01 ;
-       reg   [FPGA_NUM-1:0] fpga_id_reg = 16'hC307;
+       reg   [7:0]  task_id_reg = TASK_ID_init;
+       reg   [FPGA_NUM-1:0] fpga_id_reg = FPGA_MASK_init;
        reg   [7:0]  b_circle_amount = 8'd10;
        reg          idle = 1;
 
@@ -82,9 +83,9 @@ module lybk_trigger_create#(
        reg          task_finish_pre1;
        wire         fpga_id_switch;
        wire  [15:0] fpga_id_set; 
-       wire  [15:0] s_circle_delay_by50;
+       reg   [15:0] s_circle_delay_by50;
 
-       assign s_circle_delay_by50 = (s_circle_delay%50)? ((s_circle_delay/50)+1)*50 : s_circle_delay;
+/*       assign s_circle_delay_by50 = (s_circle_delay%50)? ((s_circle_delay/50)+1)*50 : s_circle_delay;*/
        assign S_CIRCLE_FINISH = s_circle_finish ;
        assign TASK_FINIFH = task_finish ;
 
@@ -129,15 +130,15 @@ module lybk_trigger_create#(
 //////////////////////////////////////////
        always @(posedge DATA_CLK or negedge RST_N)
               if (!RST_N) begin
-                 task_id_reg <= 8'h01;
-                 fpga_id_reg <= 16'hC307;
+                 task_id_reg <= TASK_ID_init;
+                 fpga_id_reg <= FPGA_MASK_init;
                  b_circle_amount <= 8'd10;
               end 
               else
               if (S_CIRCLE_DATA_VALID) begin
-               	task_id_reg <= TASK_ID_in;
-               	fpga_id_reg <= FPGA_ID_in;
-               	b_circle_amount <= B_CIRCLE_AMOUNT;
+                task_id_reg <= TASK_ID_in;
+                fpga_id_reg <= FPGA_ID_in;
+                b_circle_amount <= B_CIRCLE_AMOUNT;
                end 
 
         always @(posedge DATA_CLK)begin
@@ -146,30 +147,30 @@ module lybk_trigger_create#(
  ///////////////////////////////////////////////
      always @(posedge DATA_CLK or negedge rst_n)
            if (!rst_n) begin
-           	    wr_addr <= 0;
+                wr_addr <= 0;
            end else if (S_CIRCLE_DATA_VALID) begin
-           	    wr_addr <= wr_addr + 1;
+                wr_addr <= wr_addr + 1;
             end else begin
-            	  wr_addr <= 0;
+                wr_addr <= 0;
             end
 
     always @(posedge DATA_CLK or negedge rst_n )
           if(!rst_n)begin
-          	  rd_en <= 0;
+              rd_en <= 0;
           end else if ((wr_addr == wr_addr_max)&s_circle_data_valid_r) begin
-          	  rd_en <= 1;
+              rd_en <= 1;
           end  else if (task_finish)begin
-          	  rd_en <= 0;
+              rd_en <= 0;
           end  
 
     always @(posedge TRIGGER_CLK or negedge rst_n)       
           if (!rst_n) begin
-          	  rd_addr <= 0;
+              rd_addr <= 0;
           end else if (task_finish) begin
-          	  rd_addr <= 0;
+              rd_addr <= 0;
           end else if (s_circle_finish) begin
-          	  rd_addr <= rd_addr + 1;
-          	  end
+              rd_addr <= rd_addr + 1;
+              end
 
 lybk_trigger_bram lybk_trigger_bram_inst (
          .clka(DATA_CLK),    // input wire clka
@@ -202,6 +203,17 @@ lybk_trigger_bram lybk_trigger_bram_inst (
          passback_length <= rd_data[31:0];
      end
 
+   always @(posedge DATA_CLK)
+      if (rd_en_pre2) begin
+            if (s_circle_delay % 50) begin
+                s_circle_delay_by50 <= ((s_circle_delay/50)+1)*50;
+            end else begin
+                s_circle_delay_by50 <= s_circle_delay;
+            end
+        end else begin
+            s_circle_delay_by50 <= s_circle_delay_by50;
+        end 
+
 /*  always @(posedge DATA_CLK or negedge RST_N) 
     if (!RST_N)begin
         passback_length <= 0;
@@ -214,36 +226,36 @@ lybk_trigger_bram lybk_trigger_bram_inst (
        if (!rst_n) begin
             trigger_en <= 0;
        end else if (zkbk_trigger_respond) begin
-       	    trigger_en <= 1;
+            trigger_en <= 1;
        end else if (s_circle_finish) begin
-       	    trigger_en <= 0;
+            trigger_en <= 0;
        end    
 
   always @(posedge TRIGGER_CLK or negedge rst_n)
         if (!rst_n) begin
-        	trigger_delay_cnt <= 0;
+            trigger_delay_cnt <= 0;
         end else if (trigger_delay_cnt == s_circle_delay_by50 - 1) begin
-        	trigger_delay_cnt <= 0;
+            trigger_delay_cnt <= 0;
         end else if (trigger_en) begin
-        	trigger_delay_cnt <= trigger_delay_cnt + 1;
+            trigger_delay_cnt <= trigger_delay_cnt + 1;
         end
   
   always @(posedge TRIGGER_CLK or negedge rst_n)
        if (!rst_n) begin
-             trigger_times_cnt <= 0;	
+             trigger_times_cnt <= 0;    
             end else if (s_circle_finish) begin
-            	trigger_times_cnt <= 0;
+                trigger_times_cnt <= 0;
             end else if (trigger_delay_cnt == s_circle_delay_by50 - 1) begin
-            	trigger_times_cnt <= trigger_times_cnt + 1;
+                trigger_times_cnt <= trigger_times_cnt + 1;
             end  
 ////////////////////////////////////////////////////////////////
   always @(posedge TRIGGER_CLK or negedge rst_n)
        if (!rst_n) begin
-            s_circle_finish <= 0;     	
+            s_circle_finish <= 0;       
             end else if ((trigger_times_cnt == s_circle_times - 1)&&(trigger_delay_cnt == s_circle_delay_by50 - 2)) begin
-              s_circle_finish <= 1;	
+              s_circle_finish <= 1; 
             end else begin
-            	s_circle_finish <= 0;
+                s_circle_finish <= 0;
             end   
 
   always @(posedge TRIGGER_CLK or negedge rst_n)

@@ -22,8 +22,8 @@
 
 module lybk_trigger_trans#(
     parameter  FPGA_NUM = 16
-	)(
-	    input                          TRIGGER_CLK,
+    )(
+      input                        TRIGGER_CLK,
       input                          RST_N,
       input                          TRIGGER_IN_VALID,//触发信号输入有效(触发工作状态)
       input                          TRIGGER_IN,  //触发信号输入(来自触发生成模块)
@@ -56,10 +56,10 @@ module lybk_trigger_trans#(
     
 
   generate
-  	genvar i;
-  	for (i = 0 ; i < FPGA_NUM ; i = i + 1)
-  	begin : transport
-  		assign TRIGGER_OUT[i] =(TRIGGER_IN_VALID)?(FPGA_ID[i])?TRIGGER_IN : 0 : 0;//触发通道选择
+    genvar i;
+    for (i = 0 ; i < FPGA_NUM ; i = i + 1)
+    begin : transport
+        assign TRIGGER_OUT[i] =(TRIGGER_IN_VALID)?(FPGA_ID[i])?TRIGGER_IN : 0 : 0;//触发通道选择
 
       always @(posedge TRIGGER_CLK or negedge RST_N)
         if (!RST_N | TO_ZKBK_READY_VALID) begin
@@ -74,7 +74,7 @@ module lybk_trigger_trans#(
            /*.rst(~RST_N),*/
            .TrigIn(FPGA_READY[i]),
            .TrigIn_vald(fpga_ready_valid[i])); 
-  	end
+    end
   endgenerate
      
 endmodule

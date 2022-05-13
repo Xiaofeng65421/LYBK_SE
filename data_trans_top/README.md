@@ -4,6 +4,8 @@
 
 set_property LOC GTHE3_CHANNEL_X1Y0 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[24].*gen_gthe3_channel_inst[0].GTHE3_CHANNEL_PRIM_INST}]
 
+
+
 ### 补充
 
 在进行代码搬移时，尤其是IP核的搬移，只搬移xci文件，但需要把**不同的xci**文件分开到**单独的文件夹中**存放，否则在运行综合时候会将IP核锁上，IP核的综合文件会出现在工程名.gen文件夹内
